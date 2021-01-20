@@ -71,6 +71,7 @@ coldata <- data.frame(row.names = colnames(counts),
                       conditon = factor(c(rep("pre_flower",3),
                   
                                                                   rep("post_flower", 3))))
-# factor()
+# factor()? 
+# This line also created a second column?
 coldata$condition <- factor(coldata$conditon, levels = c("pre_flower",
                                                          "post_flower"))
