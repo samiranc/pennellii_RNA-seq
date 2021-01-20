@@ -7,7 +7,7 @@
 path <- file.path(getwd(), "data", "counts.txt")
 
 # Actual import 
-?read.table()
+# ?read.table()
 # sep, and escape sequence, to insert horizontal tab when tab key is pressed 
 # header function is used if the first line of the file should be used for column names 
 
@@ -52,7 +52,7 @@ metadata <- read.table(file = "./data/metadata.tsv",
 # Does it create a metadata, or what is one?
 subset_meta <- metadata[metadata$name == "pen_S-" |
                           metadata$name == "pen_S+",]
-# Now there are only 6 columns of two samples, 3 reps, of lycopersicum
+# Now there are only 6 columns of two samples, 3 reps, of pennellii
 counts_pen <- counts_pen %>% select(c(subset_meta$run)) #tidyverse
 # colnames() assigns the column names as the values below
 colnames(counts_pen) <- c("S_pen_before_flower_rep_1",
@@ -66,9 +66,8 @@ colnames(counts_pen) <- c("S_pen_before_flower_rep_1",
 # coldata is s file with the column names as the row names from the counts file
 # rep() = repetitions?
 coldata_pen <- data.frame(row.names = colnames(counts_pen),
-                      conditon = factor(c(rep("pre_flower",3),
-                                          
-                                          rep("post_flower", 3))))
+                          condition = factor(c(rep("pre_flower", 3),
+                                              rep("post_flower", 3))))
 # factor()
-coldata_pen$condition <- factor(coldata_pen$conditon, levels = c("pre_flower",
+coldata_pen$condition <- factor(coldata_pen$condition, levels = c("pre_flower",
                                                          "post_flower"))

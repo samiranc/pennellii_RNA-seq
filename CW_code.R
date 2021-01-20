@@ -68,9 +68,10 @@ colnames(counts) <- c("S_lyc_before_flower_rep_1",
 # coldata is a data frame with row names as colnames above and one column as the condition of pre and post flowering
 # rep() = repetitions?
 coldata <- data.frame(row.names = colnames(counts),
-                      condition = factor(c(rep("pre_flower", 3),
-                                          rep("post_flower", 3))))
+                      conditon = factor(c(rep("pre_flower",3),
+                  
+                                                                  rep("post_flower", 3))))
 # factor()? 
 # This line also created a second column?
-coldata$condition <- factor(coldata$condition, levels = c("pre_flower",
+coldata$condition <- factor(coldata$conditon, levels = c("pre_flower",
                                                          "post_flower"))
