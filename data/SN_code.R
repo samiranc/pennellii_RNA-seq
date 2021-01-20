@@ -63,13 +63,12 @@ colnames(counts_pen) <- c("S_pen_before_flower_rep_1",
                       "S_pen_after_flower_rep_3")
 
 # Probably would not need the ones below
-# coldata is s file with the column names as the row nmaes from the counts file
-# factor()
-# rep()
+# coldata is s file with the column names as the row names from the counts file
+# rep() = repetitions?
 coldata_pen <- data.frame(row.names = colnames(counts_pen),
                       conditon = factor(c(rep("pre_flower",3),
                                           
                                           rep("post_flower", 3))))
-#
+# factor()
 coldata_pen$condition <- factor(coldata_pen$conditon, levels = c("pre_flower",
                                                          "post_flower"))
