@@ -14,7 +14,7 @@ counts <- read.table(file = path,
 # Subtracted the first four lines/rows of counts
 counts <- tail(counts, -4)
 
-# From 156 variable to 40? The seq() function should've created a sequence of 4-156 but 156-4 too? Don't understand what the comma is for
+# From 156 variable to 40? The seq() function should've created a sequence of 4-156. Don't understand what the comma is for
 # Created a sequence of 4-156 with intervals of 4
 # The c(1,) kept the first column
 # Without [ , ] error occurs of undefined columns selected
@@ -28,7 +28,7 @@ row_names <- str_sub(row_names$V1, 6, -1) #tidyverse
 # Making the row names of counts to be equivalent to row_names above
 # This is were it actually changes the counts file, the column before v1 has the names of the genes without "gene:" in front of it
 rownames(counts) <- row_names
-# Count of each value from 2 to 40?
+# Included columns 2 through 40
 # Took out column v1
 counts <- counts[ , 2:40]
 
@@ -71,6 +71,5 @@ coldata <- data.frame(row.names = colnames(counts),
                       condition = factor(c(rep("pre_flower", 3),
                                           rep("post_flower", 3))))
 # factor()? 
-# This line also created a second column?
 coldata$condition <- factor(coldata$condition, levels = c("pre_flower",
                                                          "post_flower"))
