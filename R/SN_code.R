@@ -1,23 +1,24 @@
-# Importing and tidying the data ----------------------
-# Sets a file path that should work on all operating systems, [surely]
+# Importing and tidying the data -----------------------------------------------
+# Sets a file path that can work on all operating systems
 
-# path variable where imported counts.txt would be found
-# file.path(getwd() function is way to make code transferable to different operating systems
-
+# path variable where imported counts.txt would be found.
+# file.path(getwd() function is way to make code transferable to different
+# operating systems.
 path <- file.path(getwd(), "data", "counts.txt")
 
 # Actual import 
 # ?read.table()
-# sep, and escape sequence, to insert horizontal tab when tab key is pressed 
-# header function is used if the first line of the file should be used for column names 
-
+# sep, and escape sequence, to insert horizontal tab when tab key is pressed. 
+# header function is used if the first line of the file should be used for
+# column names. 
 counts_pen <- read.table(file = path, sep = '\t', header = FALSE)
 
 # install.packages("tidyverse")
 library(tidyverse)
 #####
 # Subtracted the first four lines/rows of counts
-# tail() returns first of last parts, in this case it returned counts minus first four rows?
+# tail() returns first of last parts, in this case it returned counts minus 
+# first four rows?
 counts_pen <- tail(counts_pen, -4)
 
 # From 156 variable to 40? Don't understand what the comma is for
@@ -28,8 +29,10 @@ counts_pen <- counts_pen[ , c(1, seq(4, 24, 4))]
 
 # Assigning row_names to be the first element in counts
 row_names <- counts_pen[1]
-# str_sub: Extract and replace substrings from a character vector (This function starts with the name of V1 at the sixth letter and end in the last one)
-# The $ helps extract v1
+# str_sub: Extract and replace substrings from a character vector 
+# (This function starts with the name of V1 at the sixth letter and end in the 
+# last one).
+# The $ helps extract v1.
 row_names <- str_sub(row_names$V1) #tidyverse
 # Making the row names of counts to be equivalent to row_names above
 rownames(counts_pen) <- row_names
@@ -70,42 +73,64 @@ coldata_pen <- data.frame(row.names = colnames(counts_pen),
                           condition = factor(c(rep("pre_flower", 3),
                                               rep("post_flower", 3))))
 # factor() is converting the character coldata_pen$condition into a factor
-# factors and strings very similar?
+# R uses reference level for factors based on alphabetical order
+# factors save space for storing categorical data by converting characters into 
+# numbers
 coldata_pen$condition <- factor(coldata_pen$condition, levels = c("pre_flower",
-                                                         "post_flower"))
+                                                                  "post_flower"))
+    
+# DESeq2------------------------------------------------------------------------                                                                  
+# To download DESeq2 because the package was not found before
+if (!requireNamespace("BiocManager", quietly = TRUE))
+install.packages("BiocManager")
+
+BiocManager::install("DESeq2")
+
+browseVignettes("DESeq2")
+library("DESeq2")
 
 # Making the DESeqDataSet object
-dds <-DESeqDataSetFromMatrix(countData = counts,
-                             colData = coldata,
+dds <- DESeqDataSetFromMatrix(countData = counts_pen,
+                             colData = coldata_pen,
                              design = ~ condition)
 
-# Calculating differential expression----------------------
+# Calculating differential expression-------------------------------------------
 
-#
+# Analysis steps wrapped in DESeq function
+# ?DESeq
 dds <- DESeq(dds)
 res <- results(dds)
 
 res
 summary(res)
 
-#
-#
+# To view result names to see correct format of coef
+resultsNames(dds)
+
+# To install apeglm because error in code below said to install
+BiocManager::install("apeglm")
+
+# Shrinking LFC estimates for visualization and ranking of genes
 resLFC <- lfcShrink(dds,
-                    coef = "condition_post_flower_vs_pre_flower",
+                    coef = "condition_pre_flower_vs_post_flower",
                     type = "apeglm")
 
-# Vizualization--------------------------------------------
+# Vizualization-----------------------------------------------------------------
 # MA-plot
-# This plot shows log fold chang 
+# This plot shows log2 fold change attributable to a given variable over the mean of normalized counts for all the samples in the DESeqDataSet.  
 plotMA(res, ylim=c(-2,2))
+# Removes low count genes
 plotMA(resLFC, ylim=c(-2,2))
 
-#PCA
-#
+# PCA
+# First transform data with variance stabilizing transformation to remove
+# dependence of variance on the mean. Useful for visualization and downstream
+# analysis. (remove returnData = TRUE for basic PCA)?
 vsd <- vst(dds, blind = FALSE)
-pcaData <- plotPCA(vsd, intgroup = c("condition"), returnDAta = TRUE)
+pcaData <- plotPCA(vsd, intgroup = c("condition"), returnData = TRUE)
 percentVar <- round(100 * attr(pcaData, "percentVar"))
 
+# ggplot2 is based on the grammar of graphics
 ggplot(pcaData, aes(PC1, PC2, color = condition, shape = condition)) +
   geom_point(aes(color = condition, shape = condition), size = 5) +
   labs(title = "Tomato pre/post flower PCA",
@@ -127,7 +152,7 @@ ggplot(pcaData, aes(PC1, PC2, color = condition, shape = condition)) +
         legend.title = element_blank(),
         legend.text = element_text(size = 20, face = 'bold'))
 
-ggsave(filename = '',
+ggsave(filename = './plots/PCA_S_pen_pre_post_flower.png',
        device = 'png',
        width = 9,
        height = 7.5,
