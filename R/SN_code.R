@@ -152,9 +152,30 @@ ggplot(pcaData, aes(PC1, PC2, color = condition, shape = condition)) +
         legend.title = element_blank(),
         legend.text = element_text(size = 20, face = 'bold'))
 
-ggsave(filename = './plots/PCA_S_pen_pre_post_flower.png',
+# To specify path of the file, not sur if this is what made it work but it did.
+path <- file.path(getwd(), "plots", "PCA_S_pen_pre_post_flower.png")
+
+ggsave(filename = "PCA_S_pen_pre_post_flower.png",
        device = 'png',
        width = 9,
        height = 7.5,
        dpi = 400,
        units = 'in')
+
+# Turning results object into a dataframe
+res_df <- as.data.frame(res)
+
+# Filtering to only counts that passed cutoff
+res_df <- res_df[complete.cases(res_df), ]
+
+# Making some sorted data frames for significant adjusted p-values at 0.05
+# Ordering values of res_df from greatest to least.
+# ‘$’ refers to a specific column relative to a specific data frame
+up_expressed_by_lfc <- res_df[order(res_df$log2FoldChange, decreasing = T), ]
+# Only values less than p-value 0.05 kept
+up_expressed_by_lfc <- up_expressed_by_lfc[up_expressed_by_lfc$padj < 0.05, ]
+# Orders new variable in descending order in log2FoldChange column
+down_expressed_by_lfc <- res_df[order(res_df$log2FoldChange), ]
+# New variable only has log changes below 0.05
+down_expressed_by_lfc <- down_expressed_by_lfc[down_expressed_by_lfc$padj < 0.05, ]
+
