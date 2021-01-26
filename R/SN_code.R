@@ -56,8 +56,8 @@ metadata <- read.table(file = "./data/metadata.tsv",
 # Does it create a metadata, or what is one?
 subset_meta <- metadata[metadata$name == "pen_S-" |
                           metadata$name == "pen_S+",]
-# Now there are only 6 columns of two samples, 3 reps, of pennellii
-counts_pen <- counts_pen %>% select(c(subset_meta$run)) #tidyverse
+
+
 # colnames() assigns the column names as the values below
 colnames(counts_pen) <- c("S_pen_before_flower_rep_1",
                       "S_pen_before_flower_rep_2",
@@ -81,13 +81,13 @@ coldata_pen$condition <- factor(coldata_pen$condition, levels = c("pre_flower",
     
 # DESeq2------------------------------------------------------------------------                                                                  
 # To download DESeq2 because the package was not found before
-if (!requireNamespace("BiocManager", quietly = TRUE))
+# if (!requireNamespace("BiocManager", quietly = TRUE))#R code missing something
 install.packages("BiocManager")
 
-BiocManager::install("DESeq2")
+# BiocManager::install("DESeq2")
 
-browseVignettes("DESeq2")
 library("DESeq2")
+# browseVignettes("DESeq2")
 
 # Making the DESeqDataSet object
 dds <- DESeqDataSetFromMatrix(countData = counts_pen,
@@ -108,7 +108,7 @@ summary(res)
 resultsNames(dds)
 
 # To install apeglm because error in code below said to install
-BiocManager::install("apeglm")
+# BiocManager::install("apeglm")
 
 # Shrinking LFC estimates for visualization and ranking of genes
 resLFC <- lfcShrink(dds,
@@ -117,7 +117,8 @@ resLFC <- lfcShrink(dds,
 
 # Vizualization-----------------------------------------------------------------
 # MA-plot
-# This plot shows log2 fold change attributable to a given variable over the mean of normalized counts for all the samples in the DESeqDataSet.  
+# This plot shows log2 fold change attributable to a given variable over the 
+# mean of normalized counts for all the samples in the DESeqDataSet.  
 plotMA(res, ylim=c(-2,2))
 # Removes low count genes
 plotMA(resLFC, ylim=c(-2,2))
