@@ -212,6 +212,9 @@ annotations <- annotations[ , c(4,5)]
 #  distinct(Parent, Note,
 #           .keep_all = TRUE)
 
+# To get rid of Note=
+annotations$Note <- substring(annotations$Note, 6)
+
 # To make parent names as rownames like res_df
 library(tidyverse)
 row_names <- annotations[1]
@@ -223,12 +226,29 @@ annotations <- annotations[ , 2]
 rownames(annotations) <- make.names(row_names, unique = TRUE)
 
 # Should I make annotations a factor?
+# annotations <- factor(annotations) # Don't do this
+# class(annotations)
 
+
+######### Disregard code below. Those were just my failed attempts######### 
+############# that I would like to visit later######################
 # Want to take out Note=, but line 230 missing something?
-library(stringr)
-Notes <- annotations[1]
-Notes <- str_sub(annotations$Note, start = 6, end = -1)
-annotations <- str_sub(annotations, Notes)
+# library(stringr)
+# Took out the rownames??
+# annotations$Note <- substring(annotations$Note, 6)
+
+#annotations <-substring(annotations$Note, 6)
+
+#library(tidyverse)
+#Notes <- annotations[1]
+
+#Notes <- str_sub(Notes$Note, 6, -1)
+
+#Notes <- str_sub(annotations[[Notes]])
+
+#annotations[ , Notes]
+#str_replace_all(annotations$Note, Notes)
+#annotations <- str_sub(annotations, Notes)
 
 ######### Disregard code below. Those were just my failed attempts for 
 # extracting mRNA rows that I would like to visit later
@@ -241,8 +261,7 @@ annotations <- str_sub(annotations, Notes)
 #annotations <- data.frame(mRNA = c(NA, "Parent", "Note"))
 #annotations %>% separate(mRNA, c("Parent", "Note"))
 
-#str_remove[annotations, c("gene", "exon", "intron", "CDS"), ]
-
+# str_remove(annotations, "Note=")
 #annotations[-grep("CDS", annotations$V3),]
 
 #library(stringr)
