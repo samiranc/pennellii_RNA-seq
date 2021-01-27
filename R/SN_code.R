@@ -197,6 +197,7 @@ annotations <- annotations %>%
 
 # To separate V9 into more columns
 # Did I do this right? Always gives error of discarded additional pieces
+library(tidyr)
 annotations <- annotations %>% separate(V9,
                          into = c("ID", "Name","Parent", "Note"),
                          sep = ";")
@@ -204,8 +205,8 @@ annotations <- annotations %>% separate(V9,
 # Extracting parent and note
 annotations <- annotations[ , c(4,5)]
 
-# To get rid of duplicates, it did reduce the number of rows but I don't think
-# it was effective.
+# To get rid of duplicates, it does reduce the number of rows but I don't know 
+# if its necessary?
 #unique(annotations)
 #annotations <- annotations %>%
 #  distinct(Parent, Note,
@@ -223,10 +224,11 @@ rownames(annotations) <- make.names(row_names, unique = TRUE)
 
 # Should I make annotations a factor?
 
-annotations <- str_remove(annotations, "Note=")
-
-Notes <- str_sub(annotations$Note, start = 6)
-annotations[Notes$Note]
+# Want to take out Note=, but line 230 missing something?
+library(stringr)
+Notes <- annotations[1]
+Notes <- str_sub(annotations$Note, start = 6, end = -1)
+annotations <- str_sub(annotations, Notes)
 
 ######### Disregard code below. Those were just my failed attempts for 
 # extracting mRNA rows that I would like to visit later
@@ -245,3 +247,6 @@ annotations[Notes$Note]
 
 #library(stringr)
 #annotations <- annotations<-filter(str_detect(V3, 'mRNA'))
+
+q()
+
