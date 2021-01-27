@@ -188,16 +188,18 @@ annotations <- read.table(file = path, sep = '\t', header = FALSE)
 # To focus on 3rd and ninth columns
 annotations <- annotations[ , c(3,9)]
 
-# Heck yeah, this extracted all of the rows with mRNA in it! 
-library(dplyr)
-
+library(tidyverse)
+# Extracted all of the rows with mRNA in it
 annotations <- annotations %>%
   group_by(V9) %>%
   filter(any(V3 == "mRNA"))
 
+# To check for duplicates
+duplicated(annotations)
+# To get rid of duplicates if there were any
+annotations <- unique(annotations)
+
 # To separate V9 into more columns
-# Did I do this right? Always gives error of discarded additional pieces
-library(tidyr)
 annotations <- annotations %>% separate(V9,
                          into = c("ID", "Name","Parent", "Note"),
                          sep = ";")
@@ -205,67 +207,19 @@ annotations <- annotations %>% separate(V9,
 # Extracting parent and note
 annotations <- annotations[ , c(4,5)]
 
-# To get rid of duplicates, it does reduce the number of rows but I don't know 
-# if its necessary?
-#unique(annotations)
-#annotations <- annotations %>%
-#  distinct(Parent, Note,
-#           .keep_all = TRUE)
-
 # To get rid of Note=
 annotations$Note <- substring(annotations$Note, 6)
 
-# To make parent names as rownames like res_df
-library(tidyverse)
-row_names <- annotations[1]
-row_names <- str_sub(row_names$Parent, 8, -1)
-annotations <- annotations[ , 2]
-# Had to use make.name() because (rownames(annotations) <- row_names) kept
-# getting an error saying there were duplicates despite the unique() function 
-# above.
-rownames(annotations) <- make.names(row_names, unique = TRUE)
+# To get rid of Parent=
+annotations$Parent <- substring(annotations$Parent, 8)
 
-# Should I make annotations a factor?
-# annotations <- factor(annotations) # Don't do this
-# class(annotations)
-
-
-######### Disregard code below. Those were just my failed attempts######### 
-############# that I would like to visit later######################
-# Want to take out Note=, but line 230 missing something?
-# library(stringr)
-# Took out the rownames??
-# annotations$Note <- substring(annotations$Note, 6)
-
-#annotations <-substring(annotations$Note, 6)
-
+#### To make parent names as rownames
 #library(tidyverse)
-#Notes <- annotations[1]
+#row_names <- annotations[1]
+#row_names <- str_sub(row_names$Parent, 8, -1)
+#annotations <- annotations[ , 2]
+#rownames(annotations) <- make.names(row_names, unique = TRUE)
 
-#Notes <- str_sub(Notes$Note, 6, -1)
-
-#Notes <- str_sub(annotations[[Notes]])
-
-#annotations[ , Notes]
-#str_replace_all(annotations$Note, Notes)
-#annotations <- str_sub(annotations, Notes)
-
-######### Disregard code below. Those were just my failed attempts for 
-# extracting mRNA rows that I would like to visit later
-
-#annotations %>% slice(mRNA)
-#annotations[mRNA.*, ]
-#subset(annotations, 'mRNA.*')
-
-
-#annotations <- data.frame(mRNA = c(NA, "Parent", "Note"))
-#annotations %>% separate(mRNA, c("Parent", "Note"))
-
-# str_remove(annotations, "Note=")
-#annotations[-grep("CDS", annotations$V3),]
-
-#library(stringr)
-#annotations <- annotations<-filter(str_detect(V3, 'mRNA'))
-
-q()
+##### Another form of taking charctaers away from a string
+#str_remove(annotations$Note, "Note=")
 
