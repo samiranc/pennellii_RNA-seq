@@ -180,3 +180,68 @@ down_expressed_by_lfc <- res_df[order(res_df$log2FoldChange), ]
 # New variable only has log changes below 0.05
 down_expressed_by_lfc <- down_expressed_by_lfc[down_expressed_by_lfc$padj < 0.05, ]
 
+# Predicted functions----------------------------------------------------------
+# Sol Genomics annotations
+path <- file.path(getwd(), "data", "spenn_v2.0_gene_models_annot.gff")
+annotations <- read.table(file = path, sep = '\t', header = FALSE)
+
+# To focus on 3rd and ninth columns
+annotations <- annotations[ , c(3,9)]
+
+# Heck yeah, this extracted all of the rows with mRNA in it! 
+library(dplyr)
+
+annotations <- annotations %>%
+  group_by(V9) %>%
+  filter(any(V3 == "mRNA"))
+
+# To separate V9 into more columns
+# Did I do this right? Always gives error of discarded additional pieces
+annotations <- annotations %>% separate(V9,
+                         into = c("ID", "Name","Parent", "Note"),
+                         sep = ";")
+
+# Extracting parent and note
+annotations <- annotations[ , c(4,5)]
+
+# To get rid of duplicates, it did reduce the number of rows but I don't think
+# it was effective.
+#unique(annotations)
+#annotations <- annotations %>%
+#  distinct(Parent, Note,
+#           .keep_all = TRUE)
+
+# To make parent names as rownames like res_df
+library(tidyverse)
+row_names <- annotations[1]
+row_names <- str_sub(row_names$Parent, 8, -1)
+annotations <- annotations[ , 2]
+# Had to use make.name() because (rownames(annotations) <- row_names) kept
+# getting an error saying there were duplicates despite the unique() function 
+# above.
+rownames(annotations) <- make.names(row_names, unique = TRUE)
+
+# Should I make annotations a factor?
+
+annotations <- str_remove(annotations, "Note=")
+
+Notes <- str_sub(annotations$Note, start = 6)
+annotations[Notes$Note]
+
+######### Disregard code below. Those were just my failed attempts for 
+# extracting mRNA rows that I would like to visit later
+
+#annotations %>% slice(mRNA)
+#annotations[mRNA.*, ]
+#subset(annotations, 'mRNA.*')
+
+
+#annotations <- data.frame(mRNA = c(NA, "Parent", "Note"))
+#annotations %>% separate(mRNA, c("Parent", "Note"))
+
+#str_remove[annotations, c("gene", "exon", "intron", "CDS"), ]
+
+#annotations[-grep("CDS", annotations$V3),]
+
+#library(stringr)
+#annotations <- annotations<-filter(str_detect(V3, 'mRNA'))
