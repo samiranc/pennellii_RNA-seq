@@ -159,7 +159,7 @@ ggplot(pcaData, aes(PC1, PC2, color = condition, shape = condition)) +
         legend.text = element_text(size = 20, face = 'bold'))
 
 # To specify path of the file, not sure if this is what made it work but it did.
-path <- file.path(getwd(), "plots", "PCA_S_pen_pre_post_flower.png")
+# path <- file.path(getwd(), "plots", "PCA_S_pen_pre_post_flower.png") ## Ill try without this
 
 ggsave(filename = "PCA_S_pen_pre_post_flower.png",
        device = 'png',
@@ -185,16 +185,15 @@ down_expressed_by_lfc <- res_df[order(res_df$log2FoldChange), ]
 # New variable only has log changes below 0.05
 down_expressed_by_lfc <- down_expressed_by_lfc[down_expressed_by_lfc$padj < 0.05, ]
 
-##############################
-# To find top 50 values?
-top_n(up_expressed_by_lfc, 50)
-# or?
-up_expressed_by_lfc %>% top_n(50)
+# To find top 50 values
+top_pen <- top_n(up_expressed_by_lfc, 50)
+# or
+#up_expressed_by_lfc %>% top_n(50)
 
-# Bottom 50 values?
-top_n(down_expressed_by_lfc, -50)
-# or?
-down_expressed_by_lfc %>% top_n(-50)
+# Bottom 50 values
+bottom_pen <- top_n(down_expressed_by_lfc, -50)
+# or
+#down_expressed_by_lfc %>% top_n(-50)
 
 # Predicted functions----------------------------------------------------------
 # Sol Genomics annotations
@@ -229,11 +228,11 @@ annotations$Note <- substring(annotations$Note, 6)
 # To get rid of Parent=
 annotations$Parent <- substring(annotations$Parent, 8)
 
-#############################
+??????????????
 # To add functional annotations of up expressed genes
-semi_join(res_df, annotations, by = NULL)
+full_join(res_df, annotations, by = c("Parent"="row names"))
 # or?
-res_df %>% semi_join(annotations, by = NULL)
+res_df %>% full_join(annotations, by = )
 
 #### To make parent names as rownames
 #library(tidyverse)
