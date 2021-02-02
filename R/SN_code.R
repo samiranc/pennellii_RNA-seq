@@ -52,11 +52,12 @@ metadata <- read.table(file = "./data/metadata.tsv",
                        sep = '\t',
                        header = TRUE)
 
-# Assigns subset_meta with unpollinated pistil rows from metadata set
-# Does it create a metadata, or what is one?
+# A subset of the metadata that extracts only the 6 replicates I'm looking for
 subset_meta <- metadata[metadata$name == "pen_S-" |
                           metadata$name == "pen_S+",]
 
+# Now there are only 6 columns of two samples, 3 reps, of pennellii RETURNED
+counts_pen <- counts_pen %>% select(c(subset_meta$run)) #tidyverse
 
 # colnames() assigns the column names as the values below
 colnames(counts_pen) <- c("S_pen_before_flower_rep_1",
@@ -82,7 +83,7 @@ coldata_pen$condition <- factor(coldata_pen$condition, levels = c("pre_flower",
 # DESeq2------------------------------------------------------------------------                                                                  
 # To download DESeq2 because the package was not found before
 # if (!requireNamespace("BiocManager", quietly = TRUE))#R code missing something
-install.packages("BiocManager")
+# install.packages("BiocManager")
 
 # BiocManager::install("DESeq2")
 
@@ -102,7 +103,10 @@ dds <- DESeq(dds)
 res <- results(dds)
 
 res
+# summary() produces results summaries, in this case cooksCutoff threshold and
+# independentFiltering from DESeq2 was used
 summary(res)
+#?results
 
 # To view result names to see correct format of coef
 resultsNames(dds)
@@ -112,7 +116,7 @@ resultsNames(dds)
 
 # Shrinking LFC estimates for visualization and ranking of genes
 resLFC <- lfcShrink(dds,
-                    coef = "condition_pre_flower_vs_post_flower",
+                    coef = "condition_post_flower_vs_pre_flower",
                     type = "apeglm")
 
 # Vizualization-----------------------------------------------------------------
@@ -131,12 +135,13 @@ vsd <- vst(dds, blind = FALSE)
 pcaData <- plotPCA(vsd, intgroup = c("condition"), returnData = TRUE)
 percentVar <- round(100 * attr(pcaData, "percentVar"))
 
-# ggplot2 is based on the grammar of graphics
+# ggplot2 is based on the grammar of graphics, ggplot() creates a coordinate 
+# system that you can add layers to.
 ggplot(pcaData, aes(PC1, PC2, color = condition, shape = condition)) +
   geom_point(aes(color = condition, shape = condition), size = 5) +
   labs(title = "Tomato pre/post flower PCA",
        x = paste0("PC1: ",percentVar[1],"% variance"),
-       y = paste0("PC1: ",percentVar[2],"% variance")) +
+       y = paste0("PC2: ",percentVar[2],"% variance")) +
   scale_color_manual(values = c("#007282", "#009E73")) +
   theme_bw() +
   theme(axis.title = element_text(size = 26, face = 'bold'),
@@ -153,7 +158,7 @@ ggplot(pcaData, aes(PC1, PC2, color = condition, shape = condition)) +
         legend.title = element_blank(),
         legend.text = element_text(size = 20, face = 'bold'))
 
-# To specify path of the file, not sur if this is what made it work but it did.
+# To specify path of the file, not sure if this is what made it work but it did.
 path <- file.path(getwd(), "plots", "PCA_S_pen_pre_post_flower.png")
 
 ggsave(filename = "PCA_S_pen_pre_post_flower.png",
@@ -166,7 +171,7 @@ ggsave(filename = "PCA_S_pen_pre_post_flower.png",
 # Turning results object into a dataframe
 res_df <- as.data.frame(res)
 
-# Filtering to only counts that passed cutoff
+# Filtering to only counts that passed cutoff, took out NA's
 res_df <- res_df[complete.cases(res_df), ]
 
 # Making some sorted data frames for significant adjusted p-values at 0.05
@@ -179,6 +184,17 @@ up_expressed_by_lfc <- up_expressed_by_lfc[up_expressed_by_lfc$padj < 0.05, ]
 down_expressed_by_lfc <- res_df[order(res_df$log2FoldChange), ]
 # New variable only has log changes below 0.05
 down_expressed_by_lfc <- down_expressed_by_lfc[down_expressed_by_lfc$padj < 0.05, ]
+
+##############################
+# To find top 50 values?
+top_n(up_expressed_by_lfc, 50)
+# or?
+up_expressed_by_lfc %>% top_n(50)
+
+# Bottom 50 values?
+top_n(down_expressed_by_lfc, -50)
+# or?
+down_expressed_by_lfc %>% top_n(-50)
 
 # Predicted functions----------------------------------------------------------
 # Sol Genomics annotations
@@ -212,6 +228,12 @@ annotations$Note <- substring(annotations$Note, 6)
 
 # To get rid of Parent=
 annotations$Parent <- substring(annotations$Parent, 8)
+
+#############################
+# To add functional annotations of up expressed genes
+semi_join(res_df, annotations, by = NULL)
+# or?
+res_df %>% semi_join(annotations, by = NULL)
 
 #### To make parent names as rownames
 #library(tidyverse)
