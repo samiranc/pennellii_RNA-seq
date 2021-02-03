@@ -38,7 +38,7 @@ row_names <- str_sub(row_names$V1) #tidyverse
 rownames(counts_pen) <- row_names
 
 # Took out column v1
-             counts_pen <- counts_pen[ , 2:7 ]
+counts_pen <- counts_pen[ , 2:7 ]
 
 # Assigning col_names the values of the SRR numbers
 col_names<- c("SRR3119155", "SRR3119156",
@@ -56,23 +56,38 @@ metadata <- read.table(file = "./data/metadata.tsv",
 subset_meta <- metadata[metadata$name == "pen_S-" |
                           metadata$name == "pen_S+",]
 
-# Now there are only 6 columns of two samples, 3 reps, of pennellii RETURNED
+###Now there are only 6 columns of two samples, 3 reps, of pennellii RETURNED
 counts_pen <- counts_pen %>% select(c(subset_meta$run)) #tidyverse
+str(counts_pen)
 
 # colnames() assigns the column names as the values below
+#colnames(counts_pen) <- c("S_pen_before_flower_rep_1",
+#                          "S_pen_after_flower_rep_1",
+#                          "S_pen_before_flower_rep_2",
+#                          "S_pen_after_flower_rep_2",
+#                          "S_pen_before_flower_rep_3",
+#                          "S_pen_after_flower_rep_3")
+###With line 60
 colnames(counts_pen) <- c("S_pen_before_flower_rep_1",
-                      "S_pen_before_flower_rep_2",
-                      "S_pen_before_flower_rep_3",
-                      "S_pen_after_flower_rep_1",
-                      "S_pen_after_flower_rep_2",
-                      "S_pen_after_flower_rep_3")
+                          "S_pen_before_flower_rep_3",
+                          "S_pen_before_flower_rep_2",
+                          "S_pen_after_flower_rep_1",
+                          "S_pen_after_flower_rep_2",
+                          "S_pen_after_flower_rep_3")
+str(counts_pen)
 
-# Probably would not need the ones below
 # coldata is s file with the column names as the row names from the counts file
-# rep() = repetitions? ( Replicates values)
+# rep() = Replicates values
+#coldata_pen <- data.frame(row.names = colnames(counts_pen),
+#                          condition = factor(rep(c("pre_flower",
+#                                                   "post_flower"), 3)))
+
+###With line 60
 coldata_pen <- data.frame(row.names = colnames(counts_pen),
                           condition = factor(c(rep("pre_flower", 3),
-                                              rep("post_flower", 3))))
+                                               rep("post_flower", 3))))
+str(counts_pen)
+
 # factor() is converting the character coldata_pen$condition into a factor
 # R uses reference level for factors based on alphabetical order
 # factors save space for storing categorical data by converting characters into 
@@ -124,7 +139,8 @@ resLFC <- lfcShrink(dds,
 # This plot shows log2 fold change attributable to a given variable over the 
 # mean of normalized counts for all the samples in the DESeqDataSet.  
 plotMA(res, ylim=c(-2,2))
-# Removes low count genes
+# MA plot of adjusted log fold changes by shrinking (adjusting genes with low 
+# numbers to be more accurate)
 plotMA(resLFC, ylim=c(-2,2))
 
 # PCA
@@ -190,7 +206,7 @@ top_pen <- top_n(up_expressed_by_lfc, 50)
 # or
 #up_expressed_by_lfc %>% top_n(50)
 
-# Bottom 50 values
+# Bottom 50 values (Should have done top values?)
 bottom_pen <- top_n(down_expressed_by_lfc, -50)
 # or
 #down_expressed_by_lfc %>% top_n(-50)
@@ -228,19 +244,23 @@ annotations$Note <- substring(annotations$Note, 6)
 # To get rid of Parent=
 annotations$Parent <- substring(annotations$Parent, 8)
 
-??????????????
-# To add functional annotations of up expressed genes
-full_join(res_df, annotations, by = c("Parent"="row names"))
-# or?
-res_df %>% full_join(annotations, by = )
-
-#### To make parent names as rownames
-#library(tidyverse)
+###To make parent names as rownames replace line 244
 #row_names <- annotations[1]
 #row_names <- str_sub(row_names$Parent, 8, -1)
 #annotations <- annotations[ , 2]
 #rownames(annotations) <- make.names(row_names, unique = TRUE)
 
-##### Another form of taking charctaers away from a string
+# ??????????????
+# To add functional annotations of up expressed genes
+res_functions <- inner_join(rownames_to_column(res_df), annotations,
+                            by = ("rowname" = "Parent"))
+
+res_functions <- left_join(res_df, annotations, by = NULL)
+
+res_df %>% full_join(annotations, by = row.names)
+
+res_functions <- merge(res_df, annotation, by = 0, all = TRUE, sort = TRUE)
+
+#Another form of taking characters away from a string
 #str_remove(annotations$Note, "Note=")
 
