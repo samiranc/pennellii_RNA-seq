@@ -1,5 +1,4 @@
 # Importing and tidying the data -----------------------------------------------
-# Sets a file path that can work on all operating systems
 
 # path variable where imported counts.txt would be found.
 # file.path(getwd() function is way to make code transferable to different
@@ -7,24 +6,20 @@
 path <- file.path(getwd(), "data", "counts.txt")
 
 # Actual import 
-# ?read.table()
-# sep, and escape sequence, to insert horizontal tab when tab key is pressed. 
-# header function is used if the first line of the file should be used for
-# column names. 
+# read.table() creates dataframe of file
+# sep = , and escape sequence, to insert horizontal tab when tab key is pressed. 
+# header = is used if the first line of the file should be used for column names. 
 counts_pen <- read.table(file = path, sep = '\t', header = FALSE)
 
 # install.packages("tidyverse")
 library(tidyverse)
-#####
+
 # Subtracted the first four lines/rows of counts
-# tail() returns first of last parts, in this case it returned counts minus 
-# first four rows?
+# tail(x,n=) generally returns last n rows of a data frame
 counts_pen <- tail(counts_pen, -4)
 
-# From 156 variable to 40? Don't understand what the comma is for
 # Created a sequence of 4-156 with intervals of 4 (kept only every third column)
-# The c(1,) kept the first column
-# Without [ , ] error occurs of undefined columns selected
+# [ , is for the rows, and c(1,) keeps the first column
 counts_pen <- counts_pen[ , c(1, seq(4, 24, 4))]
 
 # Assigning row_names to be the first element in counts
@@ -56,36 +51,20 @@ metadata <- read.table(file = "./data/metadata.tsv",
 subset_meta <- metadata[metadata$name == "pen_S-" |
                           metadata$name == "pen_S+",]
 
-###Now there are only 6 columns of two samples, 3 reps, of pennellii RETURNED
-counts_pen <- counts_pen %>% select(c(subset_meta$run)) #tidyverse
-str(counts_pen)
-
 # colnames() assigns the column names as the values below
-#colnames(counts_pen) <- c("S_pen_before_flower_rep_1",
-#                          "S_pen_after_flower_rep_1",
-#                          "S_pen_before_flower_rep_2",
-#                          "S_pen_after_flower_rep_2",
-#                          "S_pen_before_flower_rep_3",
-#                          "S_pen_after_flower_rep_3")
-###With line 60
 colnames(counts_pen) <- c("S_pen_before_flower_rep_1",
-                          "S_pen_before_flower_rep_3",
-                          "S_pen_before_flower_rep_2",
                           "S_pen_after_flower_rep_1",
+                          "S_pen_before_flower_rep_2",
                           "S_pen_after_flower_rep_2",
+                          "S_pen_before_flower_rep_3",
                           "S_pen_after_flower_rep_3")
-str(counts_pen)
 
-# coldata is s file with the column names as the row names from the counts file
+# coldata is a file with the column names as the row names from the counts file
 # rep() = Replicates values
-#coldata_pen <- data.frame(row.names = colnames(counts_pen),
-#                          condition = factor(rep(c("pre_flower",
-#                                                   "post_flower"), 3)))
-
-###With line 60
 coldata_pen <- data.frame(row.names = colnames(counts_pen),
-                          condition = factor(c(rep("pre_flower", 3),
-                                               rep("post_flower", 3))))
+                          condition = factor(rep(c("pre_flower",
+                                                   "post_flower"), 3)))
+# To make sure counts are in order
 str(counts_pen)
 
 # factor() is converting the character coldata_pen$condition into a factor
@@ -95,7 +74,8 @@ str(counts_pen)
 coldata_pen$condition <- factor(coldata_pen$condition, levels = c("pre_flower",
                                                                   "post_flower"))
     
-# DESeq2------------------------------------------------------------------------                                                                  
+# DESeq2------------------------------------------------------------------------ 
+
 # To download DESeq2 because the package was not found before
 # if (!requireNamespace("BiocManager", quietly = TRUE))#R code missing something
 # install.packages("BiocManager")
@@ -117,7 +97,6 @@ dds <- DESeqDataSetFromMatrix(countData = counts_pen,
 dds <- DESeq(dds)
 res <- results(dds)
 
-res
 # summary() produces results summaries, in this case cooksCutoff threshold and
 # independentFiltering from DESeq2 was used
 summary(res)
@@ -135,6 +114,7 @@ resLFC <- lfcShrink(dds,
                     type = "apeglm")
 
 # Vizualization-----------------------------------------------------------------
+
 # MA-plot
 # This plot shows log2 fold change attributable to a given variable over the 
 # mean of normalized counts for all the samples in the DESeqDataSet.  
@@ -146,7 +126,7 @@ plotMA(resLFC, ylim=c(-2,2))
 # PCA
 # First transform data with variance stabilizing transformation to remove
 # dependence of variance on the mean. Useful for visualization and downstream
-# analysis. (remove returnData = TRUE for basic PCA)?
+# analysis. (remove returnData = TRUE for basic PCA)
 vsd <- vst(dds, blind = FALSE)
 pcaData <- plotPCA(vsd, intgroup = c("condition"), returnData = TRUE)
 percentVar <- round(100 * attr(pcaData, "percentVar"))
@@ -174,9 +154,6 @@ ggplot(pcaData, aes(PC1, PC2, color = condition, shape = condition)) +
         legend.title = element_blank(),
         legend.text = element_text(size = 20, face = 'bold'))
 
-# To specify path of the file, not sure if this is what made it work but it did.
-# path <- file.path(getwd(), "plots", "PCA_S_pen_pre_post_flower.png") ## Ill try without this
-
 ggsave(filename = "PCA_S_pen_pre_post_flower.png",
        device = 'png',
        width = 9,
@@ -190,28 +167,29 @@ res_df <- as.data.frame(res)
 # Filtering to only counts that passed cutoff, took out NA's
 res_df <- res_df[complete.cases(res_df), ]
 
-# Making some sorted data frames for significant adjusted p-values at 0.05
-# Ordering values of res_df from greatest to least.
-# ‘$’ refers to a specific column relative to a specific data frame
+# Ordering results from high Log2Fold values to low
 up_expressed_by_lfc <- res_df[order(res_df$log2FoldChange, decreasing = T), ]
-# Only values less than p-value 0.05 kept
+# Only values less than adjusted p-value 0.05 kept
 up_expressed_by_lfc <- up_expressed_by_lfc[up_expressed_by_lfc$padj < 0.05, ]
-# Orders new variable in descending order in log2FoldChange column
+# Orders results from low to high Log2Fold values
 down_expressed_by_lfc <- res_df[order(res_df$log2FoldChange), ]
-# New variable only has log changes below 0.05
+# Only values less than adjusted p-value 0.05 kept
 down_expressed_by_lfc <- down_expressed_by_lfc[down_expressed_by_lfc$padj < 0.05, ]
 
-# To find top 50 values
-top_pen <- top_n(up_expressed_by_lfc, 50)
-# or
-#up_expressed_by_lfc %>% top_n(50)
+# Top 50 counts with greatest Log2Fold values and significant padj
+top_pen <- up_expressed_by_lfc[1:50, ]
 
-# Bottom 50 values (Should have done top values?)
-bottom_pen <- top_n(down_expressed_by_lfc, -50)
-# or
-#down_expressed_by_lfc %>% top_n(-50)
+# Top 50 counts with most negative Log2Fold values and significant padj
+bottom_pen <- down_expressed_by_lfc[1:50, ]
+
+# To find top 50 values
+#top_pen <- top_n(up_expressed_by_lfc, 50)
+
+# Bottom 50 values
+#bottom_pen <- top_n(down_expressed_by_lfc, -50)
 
 # Predicted functions----------------------------------------------------------
+
 # Sol Genomics annotations
 path <- file.path(getwd(), "data", "spenn_v2.0_gene_models_annot.gff")
 annotations <- read.table(file = path, sep = '\t', header = FALSE)
@@ -219,7 +197,6 @@ annotations <- read.table(file = path, sep = '\t', header = FALSE)
 # To focus on 3rd and ninth columns
 annotations <- annotations[ , c(3,9)]
 
-library(tidyverse)
 # Extracted all of the rows with mRNA in it
 annotations <- annotations %>%
   group_by(V9) %>%
@@ -244,23 +221,12 @@ annotations$Note <- substring(annotations$Note, 6)
 # To get rid of Parent=
 annotations$Parent <- substring(annotations$Parent, 8)
 
-###To make parent names as rownames replace line 244
-#row_names <- annotations[1]
-#row_names <- str_sub(row_names$Parent, 8, -1)
-#annotations <- annotations[ , 2]
-#rownames(annotations) <- make.names(row_names, unique = TRUE)
+# Making row names into a column named Parent
+res_df <- tibble::rownames_to_column(res_df, "Parent")
+top_pen <- tibble::rownames_to_column(top_pen, "Parent")
+bottom_pen <- tibble::rownames_to_column(bottom_pen, "Parent")
 
-# ??????????????
-# To add functional annotations of up expressed genes
-res_functions <- inner_join(rownames_to_column(res_df), annotations,
-                            by = ("rowname" = "Parent"))
-
-res_functions <- left_join(res_df, annotations, by = NULL)
-
-res_df %>% full_join(annotations, by = row.names)
-
-res_functions <- merge(res_df, annotation, by = 0, all = TRUE, sort = TRUE)
-
-#Another form of taking characters away from a string
-#str_remove(annotations$Note, "Note=")
-
+# To add functional annotations
+res_functions <- inner_join(res_df, annotations, by = "Parent")
+top_pen <- inner_join(top_pen, annotations, by = "Parent")
+bottom_pen <- inner_join(bottom_pen, annotations, by = "Parent")
