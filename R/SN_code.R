@@ -205,7 +205,7 @@ annotations <- annotations %>%
 # To check for duplicates
 #duplicated(annotations)
 # To get rid of duplicates if there were any
-#annotations <- unique(annotations)
+#annotations <- distinct(annotations)
 
 # To separate V9 into more columns
 annotations <- annotations %>% separate(V9,
@@ -238,3 +238,9 @@ duplicated(bottom_pen)
 res_functions <- distinct(res_functions)
 top_pen <- distinct(top_pen)
 bottom_pen <- distinct(bottom_pen)
+
+# To convert dataframes to excel
+#install.packages("writexl")
+library("writexl")
+write_xlsx(top_pen, "top_pen.xlsx")
+write_xlsx(bottom_pen, "bottom_pen.xlsx")
