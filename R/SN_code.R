@@ -203,9 +203,9 @@ annotations <- annotations %>%
   filter(any(V3 == "mRNA"))
 
 # To check for duplicates
-duplicated(annotations)
+#duplicated(annotations)
 # To get rid of duplicates if there were any
-annotations <- unique(annotations)
+#annotations <- unique(annotations)
 
 # To separate V9 into more columns
 annotations <- annotations %>% separate(V9,
@@ -227,6 +227,14 @@ top_pen <- tibble::rownames_to_column(top_pen, "Parent")
 bottom_pen <- tibble::rownames_to_column(bottom_pen, "Parent")
 
 # To add functional annotations
-res_functions <- inner_join(res_df, annotations, by = "Parent")
-top_pen <- inner_join(top_pen, annotations, by = "Parent")
-bottom_pen <- inner_join(bottom_pen, annotations, by = "Parent")
+res_functions <- left_join(res_df, annotations, by = "Parent")
+top_pen <- left_join(top_pen, annotations, by = "Parent")
+bottom_pen <- left_join(bottom_pen, annotations, by = "Parent")
+
+# Noticed there were duplicates after the left_join
+duplicated(top_pen)
+duplicated(bottom_pen)
+# To get rid of duplicates
+res_functions <- distinct(res_functions)
+top_pen <- distinct(top_pen)
+bottom_pen <- distinct(bottom_pen)
