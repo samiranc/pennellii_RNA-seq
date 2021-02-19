@@ -77,7 +77,7 @@ coldata_pen$condition <- factor(coldata_pen$condition, levels = c("pre_flower",
 # DESeq2------------------------------------------------------------------------ 
 
 # To download DESeq2 because the package was not found before
-# if (!requireNamespace("BiocManager", quietly = TRUE))#R code missing something
+# if (!requireNamespace("BiocManager", quietly = TRUE))
 # install.packages("BiocManager")
 
 # BiocManager::install("DESeq2")
@@ -177,10 +177,10 @@ down_expressed_by_lfc <- res_df[order(res_df$log2FoldChange), ]
 down_expressed_by_lfc <- down_expressed_by_lfc[down_expressed_by_lfc$padj < 0.05, ]
 
 # Top 50 counts with greatest Log2Fold values and significant padj
-top_pen <- up_expressed_by_lfc[1:50, ]
+top_pen <- up_expressed_by_lfc[1:100, ]
 
 # Top 50 counts with most negative Log2Fold values and significant padj
-bottom_pen <- down_expressed_by_lfc[1:50, ]
+bottom_pen <- down_expressed_by_lfc[1:100, ]
 
 # To find top 50 values
 #top_pen <- top_n(up_expressed_by_lfc, 50)
@@ -238,6 +238,15 @@ duplicated(bottom_pen)
 res_functions <- distinct(res_functions)
 top_pen <- distinct(top_pen)
 bottom_pen <- distinct(bottom_pen)
+
+# To make expressed gene tables more presentable
+top_pen <- top_pen[ , c(1, 3, 7, 8)]
+bottom_pen <- bottom_pen[ , c(1, 3, 7, 8)]
+library(plyr)
+top_pen <- rename(top_pen,
+                  c("Parent" = "GeneID", "Note" = "Hypthetical Function"))
+bottom_pen <- rename(bottom_pen,
+                     c("Parent"="GeneID", "Note" = "Hypthetical Function"))
 
 # To convert dataframes to excel
 #install.packages("writexl")
